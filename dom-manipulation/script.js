@@ -47,7 +47,7 @@ function showRandomQuote() {
     }
 }
 
-function addQuote() {
+function createAddQuoteForm() {
     if (!newQuoteTextInput || !newQuoteCategoryInput) {
         console.error("Input elements not found. DOM not fully loaded or IDs are incorrect.");
         return;
