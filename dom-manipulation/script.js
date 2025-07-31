@@ -32,8 +32,8 @@ document.addEventListener('DOMContentLoaded', function() {
 function showRandomQuote() {
     if (quotes.length === 0) {
         if (quoteTextElement) {
-            quoteTextElement.textContent = "No quotes available. Add some!";
-            quoteCategoryElement.textContent = "";
+            quoteTextElement.innerHTML = "No quotes available. Add some!";
+            quoteCategoryElement.innerHTML = "";
         }
         return;
     }
@@ -42,8 +42,8 @@ function showRandomQuote() {
     const randomQuote = quotes[randomIndex];
 
     if (quoteTextElement && quoteCategoryElement) {
-        quoteTextElement.textContent = randomQuote.text;
-        quoteCategoryElement.textContent = `- ${randomQuote.category}`;
+        quoteTextElement.innerHTML = randomQuote.text;
+        quoteCategoryElement.innerHTML = `- ${randomQuote.category}`;
     }
 }
 
