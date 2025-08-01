@@ -43,6 +43,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     filterQuotes();
 
+    // Set up periodic sync every 60 seconds
+    setInterval(syncQuotes, 60000);
+
     newQuoteButton.addEventListener('click', () => displayRandomQuote(quotes));
     exportButton.addEventListener('click', exportQuotes);
     categoryFilterElement.addEventListener('change', filterQuotes);
@@ -166,40 +169,59 @@ function importFromJsonFile(event) {
     fileReader.readAsText(event.target.files[0]);
 }
 
-const serverQuotesData = [
-    { text: "The only way to do great work is to love what you do.", category: "Steve Jobs" },
-    { text: "Innovation distinguishes between a leader and a follower.", category: "Steve Jobs" },
-    { text: "The future belongs to those who believe in the beauty of their dreams.", category: "Eleanor Roosevelt" },
-    { text: "Strive not to be a success, but rather to be of value.", category: "Albert Einstein" },
-    { text: "The mind is everything. What you think you become.", category: "Buddha" }
-];
-
-function fetchQuotesFromServer() {
-    return new Promise(resolve => {
-        setTimeout(() => {
-            resolve(serverQuotesData);
-        }, 500);
-    });
+async function fetchQuotesFromServer() {
+    try {
+        const response = await fetch('https://jsonplaceholder.typicode.com/posts');
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+        // Map the fetched data to a compatible format
+        return data.map(post => ({
+            text: post.title, // Using 'title' as the quote text
+            category: 'API Quotes' // Hardcoding a category for simplicity
+        }));
+    } catch (error) {
+        console.error('Failed to fetch quotes:', error);
+        return [];
+    }
 }
 
-function addQuoteToServer(newQuote) {
-    return new Promise(resolve => {
-        setTimeout(() => {
-            serverQuotesData.push(newQuote);
-            console.log("Quote added to simulated server:", newQuote);
-            resolve();
-        }, 500);
-    });
+async function addQuoteToServer(newQuote) {
+    try {
+        const response = await fetch('https://jsonplaceholder.typicode.com/posts', {
+            method: 'POST',
+            body: JSON.stringify({
+                title: newQuote.text,
+                body: newQuote.category,
+                userId: 1,
+            }),
+            headers: {
+                'Content-type': 'application/json; charset=UTF-8',
+            },
+        });
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+        console.log("Quote posted to server:", data);
+    } catch (error) {
+        console.error('Failed to post quote:', error);
+    }
 }
 
 async function syncQuotes() {
-    displaySyncStatus('Syncing with server...', 'info');
+    displaySyncStatus('Syncing with server...');
 
     let newQuotesCount = 0;
     let conflictsResolved = 0;
 
     const serverQuotes = await fetchQuotesFromServer();
-    
+    if (serverQuotes.length === 0) {
+        displaySyncStatus('Could not sync with server. Please try again.');
+        return;
+    }
+
     const localQuotesTexts = new Set(quotes.map(q => q.text));
     serverQuotes.forEach(serverQuote => {
         if (!localQuotesTexts.has(serverQuote.text)) {
@@ -235,14 +257,13 @@ async function syncQuotes() {
         if (conflictsResolved > 0) {
             message += `${conflictsResolved} conflict(s) resolved. Server data took precedence.`;
         }
-        displaySyncStatus(message, 'success');
+        displaySyncStatus(message);
     } else {
-        displaySyncStatus('Data is already up to date!', 'info');
+        displaySyncStatus('Data is already up to date!');
     }
 }
 
-function displaySyncStatus(message, type) {
+function displaySyncStatus(message) {
     if (!syncStatusDiv) return;
     syncStatusDiv.textContent = message;
 }
-
