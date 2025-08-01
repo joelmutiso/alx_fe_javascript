@@ -259,7 +259,7 @@ async function syncQuotes() {
         }
         displaySyncStatus(message);
     } else {
-        displaySyncStatus('Data is already up to date!');
+        displaySyncStatus('Quotes synced with server!');
     }
 }
 
